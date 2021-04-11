@@ -7,7 +7,18 @@
 
 <body>
     <h1>Welcome to the AR Library</h1>
-    <model-viewer src="water.glb" alt="A 3D model of an astronaut" auto-rotate="" camera-controls="" data-js-focus-visible="" ar-status="not-presenting"></model-viewer>
+    <model-viewer src="water.glb" alt="A 3D model of an astronaut" auto-rotate="" camera-controls="" data-js-focus-visible="" ar-status="not-presenting">
+
+    <div class="progress-bar hide" slot="progress-bar">
+        <div class="update-bar"></div>
+    </div>
+    <button slot="ar-button" id="ar-button">
+        View in your space
+    </button>
+    <div id="ar-prompt">
+        <img src="https://modelviewer.dev/shared-assets/icons/hand.png">
+    </div>
+</model-viewer>
 </body>
 
 </html>
