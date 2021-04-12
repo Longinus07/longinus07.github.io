@@ -1,2 +1,20 @@
-<script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
-<model-viewer src="water.glb" height="100%" alt="A 3D model of an astronaut" auto-rotate camera-controls></model-viewer>
+<script type="module" src="model-viewer.min.js"></script>
+<model-viewer src="water.glb" alt="A 3D model of an astronaut" auto-rotate camera-controls>
+	<div class="container" style="width: 784px; height: 475px;">
+  <div class="userInput" tabindex="0" role="img" aria-label="A depiction of a 3D model" aria-live="polite" style="cursor: grab;">
+    <canvas width="784" height="475" style="width: 784px; height: 475px;"></canvas>
+  <canvas id="webgl-canvas" width="784" height="475" class="show" style="width: 784px; height: 475px;"></canvas></div>
+
+  <!-- NOTE(cdata): We need to wrap slots because browsers without ShadowDOM
+        will have their <slot> elements removed by ShadyCSS -->
+  <div class="slot poster">
+    <slot name="poster">
+      <button type="button" id="default-poster" aria-label="A depiction of a 3D model. Activate to view in 3D!" aria-hidden="true" tabindex="-1"></button>
+    </slot>
+  </div>
+
+  <div class="slot ar-button">
+    <slot name="ar-button">
+      <a id="default-ar-button" class="fab" tabindex="2" aria-label="View this 3D model up close">
+        
+</model-viewer>
