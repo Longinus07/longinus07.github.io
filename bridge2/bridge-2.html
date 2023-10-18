@@ -6,22 +6,78 @@
     <meta name="description" content="&lt;model-viewer&gt; template">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link type="text/css" href="./styles.css" rel="stylesheet"/>
+      
+    <style>
+        *{            
+            margin: 0;
+            padding: 0;            
+        }
+        .demo{
+            height: 100vh;
+            width: 100%;                
+        }
+        .demo model-viewer{
+            width: 100%;
+            height: 100%;            
+        }
+        .btn-container{
+            position: absolute;
+            bottom: 50px;
+            width: 100%;
+            text-align: center;
+        }
+        button{
+            border: none;
+            background: #edda73;
+            height: 40px;
+            width: 150px;
+            margin: 5px; 15px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 16px;
+        }
+        button:focus{
+            outline: none;
+        }
+    </style>      
   </head>
   <body>
-    <!-- <model-viewer> HTML element -->
-    <model-viewer src="bridge-2.glb" ar ar-modes="webxr scene-viewer quick-look" camera-controls poster="poster.webp" shadow-intensity="1" auto-rotate camera-target="0m 0.05m 1.448e-8m" camera-orbit="232deg 56.8deg 0.5386m" field-of-view="30deg" autoplay>
-      <div class="progress-bar hide" slot="progress-bar">
-          <div class="update-bar"></div>
+      
+      <div class="demo">
+          
+          <model-viewer id="model" src="bridge-2.glb" auto-rotate camera-controls skybox-image="studio_small_08_1k.hdr" animation-name="a01" autoplay ar></model-viewer>
+          
+          <div class="btn-container">
+              <button type="button" onclick="stop()">STOP</button>
+              <button type="button" onclick="run()">RUN</button>
+              <button type="button" onclick="wave()">WAVE</button>
+              
+          </div>
+          
       </div>
-      <button slot="ar-button" id="ar-button">
-          View in your space
-      </button>
-      <div id="ar-prompt">
-          <img src="ar_hand_prompt.png">
-      </div>
-    </model-viewer>  
+      
+    <script>
+        var modelviewer = document.getElementById('model');
+        
+        function stop(){
+            modelviewer.animationName = 'a01';
+        }
+         function run(){
+            modelviewer.animationName = 'a04';
+        }
+         function wave(){
+            modelviewer.animationName = 'none';
+        }
+    </script>
+      
+    
     <script src="script.js"></script>
     <!-- Loads <model-viewer> for browsers: -->
     <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.2.0/model-viewer.min.js"></script>
   </body>
+    
+<!--bridge-2.glb--!主檔名
+<!--studio_small_08_1k.hdr--!環境圖    
+<!--a01--!動畫1
+<!--a04--!動畫2
 </html>
