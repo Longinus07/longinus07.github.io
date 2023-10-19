@@ -45,39 +45,42 @@
       
       <div class="demo">
           
-          <model-viewer id="model" src="bridge-2.glb" auto-rotate camera-controls skybox-image="studio_small_08_1k.hdr" animation-name="a01" autoplay ar></model-viewer>
+          <model-viewer id="model" src="bridge-2.glb" auto-rotate camera-controls poster="poster.webp" shadow-intensity="1" camera-orbit="-30deg 70deg 0.5m" field-of-view="30deg" skybox-image="studio_small_08_1k.hdr" animation-name="a01" autoplay ar></model-viewer>
           
           <div class="btn-container">
-              <button type="button" onclick="stop()">STOP</button>
-              <button type="button" onclick="run()">RUN</button>
-              <button type="button" onclick="wave()">WAVE</button>
-              
+              <button type="button" onclick="Move01()">Move01</button>
+              <button type="button" onclick="Move02()">Move02</button>
+              <button type="button" onclick="play()">play/Stop</button>    
           </div>
           
       </div>
       
     <script>
         var modelviewer = document.getElementById('model');
+        var isPaused = false;// 變量來跟蹤動畫是否已經暫停
         
-        function stop(){
+        function Move01(){
             modelviewer.animationName = 'a01';
         }
-         function run(){
+         function Move02(){
             modelviewer.animationName = 'a04';
         }
-         function wave(){
-            modelviewer.animationName = 'none';
-        }
+         function play(){
+             if (!isPaused){
+                 modelviewer.pause(); // 如果動畫沒有暫停，則暫停動畫
+        isPaused = true;
+             }
+             else{
+                  modelviewer.play(); // 如果動畫已經暫停，則播放動畫
+        isPaused = false;                 
+             }
+         }
     </script>
       
-    
     <script src="script.js"></script>
     <!-- Loads <model-viewer> for browsers: -->
     <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.2.0/model-viewer.min.js"></script>
+      
   </body>
-    
-<!--bridge-2.glb--!主檔名
-<!--studio_small_08_1k.hdr--!環境圖    
-<!--a01--!動畫1
-<!--a04--!動畫2
+
 </html>
