@@ -57,7 +57,7 @@
       
     <script>
         var modelviewer = document.getElementById('model');
-        var isPaused = false;// 變量來跟蹤動畫是否已經暫停
+        var isPaused = false;
         
         function Move01(){
             modelviewer.animationName = 'a01';
@@ -67,11 +67,11 @@
         }
          function play(){
              if (!isPaused){
-                 modelviewer.pause(); // 如果動畫沒有暫停，則暫停動畫
+                 modelviewer.pause(); 
         isPaused = true;
              }
              else{
-                  modelviewer.play(); // 如果動畫已經暫停，則播放動畫
+                  modelviewer.play(); 
         isPaused = false;                 
              }
          }
