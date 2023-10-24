@@ -45,8 +45,7 @@
   </head>
   <body>
     <!-- <model-viewer> HTML element -->
-    <model-viewer src="m.glb" ar ar-modes="webxr scene-viewer quick-look" camera-controls poster="poster.webp" shadow-intensity="1">
-      </model-viewer>  
+    <model-viewer src="m.glb" ar ar-modes="webxr scene-viewer quick-look" camera-controls poster="poster.webp" shadow-intensity="1">    </model-viewer>  
 
       <div class="progress-bar hide" slot="progress-bar">
           <div class="update-bar"></div>
@@ -59,7 +58,31 @@
       <button type="button" onclick="bbb()">blue</button>
 
     </div>
-        
+      
+      <script>
+          let currentVariant = 'rrr'; // 初始變體為 'rrr'
+
+function changeVariant(variant) {
+    const viewer = document.querySelector('model-viewer');
+    viewer.setAttribute('src', `${variant}.glb`);
+    currentVariant = variant;
+}
+
+function rrr() {
+    changeVariant('rrr');
+}
+
+function ggg() {
+    changeVariant('ggg');
+}
+
+function bbb() {
+    changeVariant('bbb');
+}
+   
+  </script>
+      
+      
       <button slot="ar-button" id="ar-button">
           View in your space
       </button>
