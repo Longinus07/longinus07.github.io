@@ -58,31 +58,23 @@
       <button type="button" onclick="bbb()">blue</button>
 
     </div>
-      
-      <script>
-          let currentVariant = 'rrr'; // 初始變體為 'rrr'
+    <script>
+    let currentVariantIndex = 0;
+    const variants = ['rrr', 'ggg', 'bbb'];
 
-function changeVariant(variant) {
-    const viewer = document.querySelector('model-viewer');
-    viewer.setAttribute('src', `${variant}.glb`);
-    currentVariant = variant;
-}
+    function changeVariant() {
+        const viewer = document.querySelector('model-viewer');
+        viewer.setAttribute('src', `${variants[currentVariantIndex]}.glb`);
+        currentVariantIndex = (currentVariantIndex + 1) % variants.length;
+    }
 
-function rrr() {
-    changeVariant('rrr');
-}
+    function startRotation() {
+        setInterval(changeVariant, 3000); // 每隔3秒切換一次
+    }
 
-function ggg() {
-    changeVariant('ggg');
-}
+    startRotation();
+</script>
 
-function bbb() {
-    changeVariant('bbb');
-}
-   
-  </script>
-      
-      
       <button slot="ar-button" id="ar-button">
           View in your space
       </button>
