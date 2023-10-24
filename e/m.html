@@ -44,7 +44,7 @@
       
   </head>
   <body>
-    <!-- <model-viewer> HTML element -->
+    
     <model-viewer src="m.glb" ar ar-modes="webxr scene-viewer quick-look" camera-controls poster="poster.webp" shadow-intensity="1">    </model-viewer>  
 
       <div class="progress-bar hide" slot="progress-bar">
@@ -62,17 +62,23 @@
     let currentVariantIndex = 0;
     const variants = ['rrr', 'ggg', 'bbb'];
 
-    function changeVariant() {
+    function changeVariant(index) {
         const viewer = document.querySelector('model-viewer');
-        viewer.setAttribute('src', `${variants[currentVariantIndex]}.glb`);
-        currentVariantIndex = (currentVariantIndex + 1) % variants.length;
+        viewer.setAttribute('src', `${variants[index]}.glb`);
+        currentVariantIndex = index;
     }
 
-    function startRotation() {
-        setInterval(changeVariant, 3000); // 每隔3秒切換一次
+    function rrr() {
+        changeVariant(0); // 顯示 'rrr'
     }
 
-    startRotation();
+    function ggg() {
+        changeVariant(1); // 顯示 'ggg'
+    }
+
+    function bbb() {
+        changeVariant(2); // 顯示 'bbb'
+    }
 </script>
 
       <button slot="ar-button" id="ar-button">
