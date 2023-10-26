@@ -1,89 +1,66 @@
-<!doctype html>
-<html lang="en">
-  <head>
+<!DOCTYPE html>
+<html>
+<head>
     <title>&lt;model-viewer&gt; template</title>
     <meta charset="utf-8">
     <meta name="description" content="&lt;model-viewer&gt; template">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link type="text/css" href="./styles.css" rel="stylesheet"/>
-<style>
-      /* 以下是內部樣式表，設置了基本的CSS樣式 */
-      *{            
-          margin: 0;
-          padding: 0;            
-      }
-      .demo{
-          height: 100vh; /* 設置demo容器的高度為視口高度 */
-          width: 100%;  /* 設置demo容器的寬度為100% */
-      }
-      .demo model-viewer{
-          width: 100%; /* 設置model-viewer元素的寬度為100% */
-          height: 100%; /* 設置model-viewer元素的高度為100% */
-      }
-      .btn-container{
-          position: absolute; /* 設置按鈕容器的定位為絕對定位 */
-          bottom: 50px; /* 將按鈕容器定位在底部50px的位置 */
-          width: 100%; /* 設置按鈕容器的寬度為100% */
-          text-align: center; /* 將按鈕居中對齊 */
-      }
-      button{
-          border: none; /* 設置按鈕邊框為無 */
-          background: #edda73; /* 設置按鈕背景顏色 */
-          height: 40px; /* 設置按鈕高度為40px */
-          width: 150px; /* 設置按鈕寬度為150px */
-          margin: 5px 15px; /* 設置按鈕的外邊距 */
-          cursor: pointer; /* 設置鼠標懸停時的指針類型 */
-          font-weight: bold; /* 設置按鈕文本的字體粗細 */
-          font-size: 16px; /* 設置按鈕文本的字體大小 */
-      }
-      button:focus{
-          outline: none; /* 移除按鈕獲得焦點時的輪廓線 */
-      }
-</style>
-  </head>
-    
+    <style>
+        /* 以下是內部樣式表，設置了基本的CSS樣式 */
+        *{            
+            margin: 0;
+            padding: 0;            
+        }
+        .demo{
+            height: 100vh;
+            width: 100%;
+        }
+        .demo model-viewer{
+            width: 100%;
+            height: 100%;
+        }
+        .controls {
+            text-align: center;
+            margin-top: -5px;
+            font-size: 20px;
+        }
+        select.event-listener {
+            font-size: 20px;
+        }
+    </style>
+</head>
 <body>
-<model-viewer id="shoe" camera-controls touch-action="pan-y" src="m.glb" ar alt="A 3D model of a Shoe">
-  <div class="controls">
-    <div>Variant: <select id="variant"></select></div>
-  </div>
-</model-viewer>
-<script>
-const modelViewerVariants = document.querySelector("model-viewer#shoe");
-const select = document.querySelector('#variant');
+    <model-viewer id="model" camera-controls touch-action="pan-y" src="m.glb" ar alt="A 3D model of a Shoe"></model-viewer>
+    <div class="controls">
+        <div>Variant: <select id="variant" class="event-listener"></select></div>
+    </div>
+    <script>
+        const modelViewerVariants = document.querySelector("model-viewer#model");
+        const select = document.querySelector('#variant');
 
-modelViewerVariants.addEventListener('load', () => {
-  const names = modelViewerVariants.availableVariants;
-  for (const name of names) {
-    const option = document.createElement('option');
-    option.value = name;
-    option.textContent = name;
-    select.appendChild(option);
-  }
-  // Adds a default option.
-  const option = document.createElement('option');
-    option.value = 'default';
-    option.textContent = 'Default';
-    select.appendChild(option);
-});
+        modelViewerVariants.addEventListener('load', () => {
+            const names = modelViewerVariants.availableVariants;
+            for (const name of names) {
+                const option = document.createElement('option');
+                option.value = name;
+                option.textContent = name;
+                select.appendChild(option);
+            }
+        });
 
-select.addEventListener('input', (event) => {
-  modelViewerVariants.variantName = event.target.value === 'default' ? null : event.target.value;
-});
-</script>
+        select.addEventListener('input', (event) => {
+            modelViewerVariants.variantName = event.target.value === 'default' ? null : event.target.value;
+        });
+    </script>
 
-<script src="script.js"></script>
+    <script src="script.js"></script>
 
-<button slot="ar-button" id="ar-button">
-    View in your space
-</button>
+    <button slot="ar-button" id="ar-button">
+        View in your space
+    </button>
 
-<div id="ar-prompt">
-    <img src="ar_hand_prompt.png">
-</div>
-
-<script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.2.0/model-viewer.min.js"></script>
+    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.2.0/model-viewer.min.js"></script>
 
 </body>
-
 </html>
