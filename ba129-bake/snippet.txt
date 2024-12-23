@@ -1,0 +1,1 @@
+<model-viewer src="ba129.glb" ar ar-modes="webxr scene-viewer quick-look" camera-controls tone-mapping="neutral" poster="poster.webp" shadow-intensity="1" auto-rotate camera-orbit="27.27deg 62.75deg 0.2427m" field-of-view="30deg"> </model-viewer>
