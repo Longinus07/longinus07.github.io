@@ -1,0 +1,1 @@
+<model-viewer src="tv250a.glb" ar ar-modes="webxr scene-viewer quick-look" camera-controls tone-mapping="neutral" poster="poster.png" shadow-intensity="1" auto-rotate camera-orbit="28.85deg 71.84deg 0.2421m" field-of-view="30deg" min-camera-orbit="auto auto 0.5m" max-camera-orbit="auto auto 0.6m"> </model-viewer>
