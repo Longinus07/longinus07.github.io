@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Touch 168色 互動式麥可筆色票</title>
+    <style>
+        :root {
+            --bg-color: #f5f7fa;
+            --text-color: #2c3e50;
+            --card-bg: #ffffff;
+            --border-color: #e1e8ed;
+            --primary: #3498db;
+        }
+        [data-theme="dark"] {
+            --bg-color: #1a1e23;
+            --text-color: #e1e8ed;
+            --card-bg: #2c313a;
+            --border-color: #3e4451;
+            --primary: #5dade2;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            padding: 2rem;
+        }
+        
+        .header {
+            max-width: 1200px;
+            margin: 0 auto 2rem;
+            text-align: center;
+            position: relative;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            font-weight: 700;
+        }
+        
+        p.subtitle {
+            color: #7f8c8d;
+            margin-bottom: 2rem;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-bottom: 2rem;
+        }
+        
+        button {
+            background-color: var(--card-bg);
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9rem;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            transition: transform 0.1s, border-color 0.2s, box-shadow 0.2s;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        button.active {
+            background-color: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+        
+        .theme-toggle {
+            position: absolute;
+            top: 0;
+            right: 0;
+        }
+        
+        .color-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+            gap: 15px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .color-card {
+            background-color: var(--card-bg);
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid var(--border-color);
+            position: relative;
+        }
+        
+        .color-card:hover {
+            transform: translateY(-5px) scale(1.05);
+            box-shadow: 0 10px 15px rgba(0,0,0,0.1);
+            z-index: 10;
+        }
+        
+        .swatch {
+            height: 60px;
+            width: 100%;
+        }
+        
+        .info {
+            padding: 8px 5px;
+            text-align: center;
+        }
+        
+        .code {
+            font-weight: 800;
+            font-size: 1rem;
+            margin-bottom: 2px;
+        }
+        
+        .name {
+            font-size: 0.65rem;
+            color: #7f8c8d;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .color-card::after {
+            content: attr(data-hex);
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s;
+        }
+        
+        .color-card:hover::after {
+            opacity: 1;
+        }
+        
+        #toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background-color: #2ecc71;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 30px;
+            font-weight: bold;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            opacity: 0;
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.4s;
+            z-index: 1000;
+        }
+        
+        #toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+        
+        .search-container {
+            max-width: 400px;
+            margin: 0 auto 2rem;
+            position: relative;
+        }
+        
+        .search-input {
+            width: 100%;
+            padding: 12px 20px;
+            border: 2px solid var(--border-color);
+            border-radius: 30px;
+            background-color: var(--card-bg);
+            color: var(--text-color);
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+        
+        .search-input:focus {
+            border-color: var(--primary);
+        }
+        
+        @media (max-width: 768px) {
+            .theme-toggle {
+                position: static;
+                margin-bottom: 1rem;
+            }
+            .color-grid {
+                grid-template-columns: repeat(auto-fill, minmax(65px, 1fr));
+            }
+            .swatch {
+                height: 50px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>Touch 168色 互動式色票</h1>
+        <p class="subtitle">點擊色塊自動複製 HEX 色碼</p>
+        
+        <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()">切換深色/淺色模式</button>
+        
+        <div class="search-container">
+            <input type="text" id="searchInput" class="search-input" placeholder="搜尋色號或名稱 (例如: CG1, Red)..." onkeyup="filterColors()">
+        </div>
+        
+        <div class="controls" id="filterControls">
+            <button class="active" onclick="setFilter('All')">全部顯示</button>
+            <button onclick="setFilter('Red')">紅色系</button>
+            <button onclick="setFilter('Orange')">橘色系</button>
+            <button onclick="setFilter('Yellow')">黃色系</button>
+            <button onclick="setFilter('Green')">綠色系</button>
+            <button onclick="setFilter('Blue')">藍色系</button>
+            <button onclick="setFilter('Purple')">紫色系</button>
+            <button onclick="setFilter('Brown')">大地色/棕色</button>
+            <button onclick="setFilter('Grey')">灰黑色系</button>
+            <button onclick="setFilter('Fl.')">螢光色</button>
+        </div>
+    </div>
+
+    <div class="color-grid" id="colorGrid"></div>
+    <div id="toast">已複製色碼!</div>
+
+    <script>
+        // 完整的 168 色資料庫
+        const colors = [
+            {"code": "1", "name": "Wine Red", "hex": "#8c2e39", "family": "Red"}, {"code": "2", "name": "Old Red", "hex": "#a13c49", "family": "Red"}, {"code": "3", "name": "Rose Red", "hex": "#c8354c", "family": "Red"}, {"code": "4", "name": "Vivid Red", "hex": "#d32236", "family": "Red"}, {"code": "5", "name": "Cherry Pink", "hex": "#e44e6b", "family": "Red"}, {"code": "6", "name": "Vivid Pink", "hex": "#ed6781", "family": "Red"}, {"code": "7", "name": "Cosmos", "hex": "#ef798b", "family": "Red"}, {"code": "8", "name": "Rose Pink", "hex": "#f596a7", "family": "Red"}, {"code": "9", "name": "Pale Pink", "hex": "#fab8c6", "family": "Red"}, {"code": "10", "name": "Deep Red", "hex": "#b22432", "family": "Red"}, {"code": "11", "name": "Carmine", "hex": "#c22a38", "family": "Red"}, {"code": "12", "name": "Coral Red", "hex": "#e14451", "family": "Red"}, {"code": "13", "name": "Scarlet", "hex": "#e84742", "family": "Red"}, {"code": "14", "name": "Vermilion", "hex": "#ec5642", "family": "Red"}, {"code": "15", "name": "Geranium", "hex": "#ef6750", "family": "Red"}, {"code": "16", "name": "Coral Pink", "hex": "#f68673", "family": "Red"}, {"code": "17", "name": "Pastel Pink", "hex": "#fac8bc", "family": "Red"}, {"code": "18", "name": "Peach", "hex": "#fadcd3", "family": "Red"}, {"code": "135", "name": "Pale Cherry Pink", "hex": "#fbccd1", "family": "Red"}, {"code": "136", "name": "Blush", "hex": "#f9dee1", "family": "Red"}, {"code": "137", "name": "Medium Pink", "hex": "#f4aab8", "family": "Red"}, {"code": "138", "name": "Light Pink", "hex": "#fbd6dc", "family": "Red"}, {"code": "196", "name": "Pale Pink Light", "hex": "#fdecf0", "family": "Red"}, {"code": "198", "name": "Tender Pink", "hex": "#fadfe6", "family": "Red"},
+            {"code": "21", "name": "Terracotta", "hex": "#d36544", "family": "Orange"}, {"code": "22", "name": "French Vermilion", "hex": "#e56c42", "family": "Orange"}, {"code": "23", "name": "Orange", "hex": "#ef7c38", "family": "Orange"}, {"code": "24", "name": "Marigold", "hex": "#f59b43", "family": "Orange"}, {"code": "25", "name": "Salmon Pink", "hex": "#faa47c", "family": "Orange"}, {"code": "26", "name": "Pastel Peach", "hex": "#fcb89b", "family": "Orange"}, {"code": "27", "name": "Powder Pink", "hex": "#fddcc7", "family": "Orange"}, {"code": "28", "name": "Fruit Pink", "hex": "#ffe6d3", "family": "Orange"}, {"code": "29", "name": "Barely Beige", "hex": "#fef0e3", "family": "Orange"}, {"code": "140", "name": "Light Orange", "hex": "#fbdca3", "family": "Orange"}, {"code": "131", "name": "Skin White", "hex": "#fcefe2", "family": "Orange"}, {"code": "132", "name": "Milky White", "hex": "#fff7ef", "family": "Orange"}, {"code": "133", "name": "Baby Skin Pink", "hex": "#fce5d2", "family": "Orange"}, {"code": "134", "name": "Raw Silk", "hex": "#fae8d4", "family": "Orange"},
+            {"code": "31", "name": "Dark Yellow", "hex": "#d79929", "family": "Yellow"}, {"code": "32", "name": "Deep Yellow", "hex": "#efb028", "family": "Yellow"}, {"code": "33", "name": "Melon Yellow", "hex": "#f8c538", "family": "Yellow"}, {"code": "34", "name": "Yellow", "hex": "#fbd53f", "family": "Yellow"}, {"code": "35", "name": "Lemon Yellow", "hex": "#fce458", "family": "Yellow"}, {"code": "36", "name": "Cream", "hex": "#fdf196", "family": "Yellow"}, {"code": "37", "name": "Pastel Yellow", "hex": "#fef3b9", "family": "Yellow"}, {"code": "38", "name": "Pale Yellow", "hex": "#fef7cd", "family": "Yellow"}, {"code": "45", "name": "Canaria Yellow", "hex": "#e2d242", "family": "Yellow"}, {"code": "141", "name": "Buttercup Yellow", "hex": "#fdeea6", "family": "Yellow"}, {"code": "142", "name": "Pale Cream", "hex": "#fef6d1", "family": "Yellow"},
+            {"code": "41", "name": "Olive Green", "hex": "#7c8536", "family": "Green"}, {"code": "42", "name": "Bronze Green", "hex": "#67702f", "family": "Green"}, {"code": "43", "name": "Deep Olive Green", "hex": "#5a6428", "family": "Green"}, {"code": "44", "name": "Fresh Green", "hex": "#8a962a", "family": "Green"}, {"code": "46", "name": "Vivid Green", "hex": "#6cb546", "family": "Green"}, {"code": "47", "name": "Grass Green", "hex": "#7abf52", "family": "Green"}, {"code": "48", "name": "Yellow Green", "hex": "#9ed049", "family": "Green"}, {"code": "49", "name": "Pastel Green", "hex": "#bade57", "family": "Green"}, {"code": "50", "name": "Forest Green", "hex": "#246e45", "family": "Green"}, {"code": "51", "name": "Dark Green", "hex": "#1e5c3b", "family": "Green"}, {"code": "52", "name": "Deep Green", "hex": "#184f32", "family": "Green"}, {"code": "53", "name": "Turquoise Green", "hex": "#359670", "family": "Green"}, {"code": "54", "name": "Viridian", "hex": "#42a67f", "family": "Green"}, {"code": "55", "name": "Emerald Green", "hex": "#52bc95", "family": "Green"}, {"code": "56", "name": "Mint Green", "hex": "#68c9a3", "family": "Green"}, {"code": "57", "name": "Pastel Green", "hex": "#8fd9b8", "family": "Green"}, {"code": "58", "name": "Mint Green Light", "hex": "#a9e3c9", "family": "Green"}, {"code": "59", "name": "Pale Green", "hex": "#c4ecd9", "family": "Green"}, {"code": "163", "name": "Green Bice", "hex": "#cbe892", "family": "Green"}, {"code": "164", "name": "Anise", "hex": "#daeeb1", "family": "Green"}, {"code": "166", "name": "Mignonette", "hex": "#b9dc90", "family": "Green"}, {"code": "167", "name": "Pale Green Lt", "hex": "#d7efbb", "family": "Green"}, {"code": "171", "name": "Jade Green", "hex": "#65cba2", "family": "Green"}, {"code": "172", "name": "Spectrum Green", "hex": "#4cb980", "family": "Green"}, {"code": "173", "name": "Dim Green", "hex": "#92d4a6", "family": "Green"}, {"code": "174", "name": "Spring Dim Green", "hex": "#bee4c8", "family": "Green"}, {"code": "175", "name": "Lime Green", "hex": "#cce6af", "family": "Green"},
+            {"code": "61", "name": "Peacock Green", "hex": "#1a7082", "family": "Blue"}, {"code": "62", "name": "Marine Blue", "hex": "#2a628f", "family": "Blue"}, {"code": "63", "name": "Cerulean Blue", "hex": "#3582ba", "family": "Blue"}, {"code": "64", "name": "Indian Blue", "hex": "#4895c8", "family": "Blue"}, {"code": "65", "name": "Ice Blue", "hex": "#75badf", "family": "Blue"}, {"code": "66", "name": "Baby Blue", "hex": "#91cceb", "family": "Blue"}, {"code": "67", "name": "Pastel Blue", "hex": "#acdcf0", "family": "Blue"}, {"code": "68", "name": "Turquoise Blue", "hex": "#58badf", "family": "Blue"}, {"code": "69", "name": "Prussian Blue", "hex": "#294572", "family": "Blue"}, {"code": "70", "name": "Royal Blue", "hex": "#385b96", "family": "Blue"}, {"code": "71", "name": "Cobalt Blue", "hex": "#426cb0", "family": "Blue"}, {"code": "72", "name": "Napoleon Blue", "hex": "#44598c", "family": "Blue"}, {"code": "73", "name": "Ultra Marine", "hex": "#4d64a0", "family": "Blue"}, {"code": "74", "name": "Brilliant Blue", "hex": "#5b81c4", "family": "Blue"}, {"code": "75", "name": "Dark Blue Light", "hex": "#7093cc", "family": "Blue"}, {"code": "76", "name": "Sky Blue", "hex": "#87aee0", "family": "Blue"}, {"code": "77", "name": "Pale Blue", "hex": "#acc9ed", "family": "Blue"}, {"code": "143", "name": "Mint Blue", "hex": "#bfe5ed", "family": "Blue"}, {"code": "144", "name": "Pale Baby Blue", "hex": "#d6ebf5", "family": "Blue"}, {"code": "178", "name": "Cool Shadow", "hex": "#dceaf1", "family": "Blue"}, {"code": "179", "name": "Aqua Mint", "hex": "#b9e3e7", "family": "Blue"}, {"code": "182", "name": "Frost Blue", "hex": "#d4edf3", "family": "Blue"}, {"code": "183", "name": "Phthalo Blue", "hex": "#a3d2e6", "family": "Blue"}, {"code": "185", "name": "Pale Blue Light", "hex": "#d6eaf5", "family": "Blue"},
+            {"code": "81", "name": "Deep Violet", "hex": "#53377a", "family": "Purple"}, {"code": "82", "name": "Light Violet", "hex": "#765c96", "family": "Purple"}, {"code": "83", "name": "Lavender", "hex": "#8b78af", "family": "Purple"}, {"code": "84", "name": "Pastel Violet", "hex": "#a597c5", "family": "Purple"}, {"code": "85", "name": "Vivid Purple", "hex": "#85499c", "family": "Purple"}, {"code": "86", "name": "Vivid Reddish Purple", "hex": "#964585", "family": "Purple"}, {"code": "87", "name": "Azalea Purple", "hex": "#ad5a99", "family": "Purple"}, {"code": "88", "name": "Purple Grey", "hex": "#b08ba9", "family": "Purple"}, {"code": "89", "name": "Pale Purple", "hex": "#d8bcd3", "family": "Purple"}, {"code": "145", "name": "Pale Lavender", "hex": "#d2cae1", "family": "Purple"}, {"code": "146", "name": "Mauve Shadow", "hex": "#dfd5e5", "family": "Purple"}, {"code": "147", "name": "Pale Lilac", "hex": "#ebdcf0", "family": "Purple"},
+            {"code": "91", "name": "Natural Oak", "hex": "#8c6f48", "family": "Brown"}, {"code": "92", "name": "Chocolate", "hex": "#755234", "family": "Brown"}, {"code": "93", "name": "Burnt Orange", "hex": "#a56230", "family": "Brown"}, {"code": "94", "name": "Brick Brown", "hex": "#925134", "family": "Brown"}, {"code": "95", "name": "Burnt Sienna", "hex": "#965239", "family": "Brown"}, {"code": "96", "name": "Mahogany", "hex": "#7d412e", "family": "Brown"}, {"code": "97", "name": "Rose Beige", "hex": "#a46f5e", "family": "Brown"}, {"code": "98", "name": "Chestnut Brown", "hex": "#724738", "family": "Brown"}, {"code": "99", "name": "Bronze", "hex": "#684f32", "family": "Brown"}, {"code": "100", "name": "Walnut", "hex": "#54402a", "family": "Brown"}, {"code": "101", "name": "Yellow Ochre", "hex": "#a58245", "family": "Brown"}, {"code": "102", "name": "Raw Umber", "hex": "#7c684a", "family": "Brown"}, {"code": "103", "name": "Potato Brown", "hex": "#8c7553", "family": "Brown"}, {"code": "104", "name": "Brown Grey", "hex": "#8c8273", "family": "Brown"}, {"code": "107", "name": "Sand", "hex": "#c4b49a", "family": "Brown"}, {"code": "109", "name": "Pearl White", "hex": "#dfd7ca", "family": "Brown"}, {"code": "169", "name": "Putty", "hex": "#d1c7af", "family": "Brown"},
+            {"code": "121", "name": "Fl. Coral Red", "hex": "#ff5964", "family": "Fl."}, {"code": "122", "name": "Fl. Orange", "hex": "#ff8c42", "family": "Fl."}, {"code": "123", "name": "Fl. Yellow", "hex": "#ffee32", "family": "Fl."}, {"code": "124", "name": "Fl. Green", "hex": "#a7ff52", "family": "Fl."}, {"code": "125", "name": "Fl. Rose", "hex": "#ff4f8b", "family": "Fl."}, {"code": "126", "name": "Fl. Pink", "hex": "#ff7fb3", "family": "Fl."},
+            {"code": "120", "name": "Black", "hex": "#1a1a1a", "family": "Grey"},
+            {"code": "BG1", "name": "Blue Grey 1", "hex": "#dbe3e8", "family": "Grey"}, {"code": "BG3", "name": "Blue Grey 3", "hex": "#b9c7cf", "family": "Grey"}, {"code": "BG5", "name": "Blue Grey 5", "hex": "#92a6b2", "family": "Grey"}, {"code": "BG7", "name": "Blue Grey 7", "hex": "#6b8390", "family": "Grey"}, {"code": "BG9", "name": "Blue Grey 9", "hex": "#445964", "family": "Grey"},
+            {"code": "CG0.5", "name": "Cool Grey 0.5", "hex": "#e8e9ea", "family": "Grey"}, {"code": "CG1", "name": "Cool Grey 1", "hex": "#dee0e2", "family": "Grey"}, {"code": "CG2", "name": "Cool Grey 2", "hex": "#ced2d6", "family": "Grey"}, {"code": "CG3", "name": "Cool Grey 3", "hex": "#bcc2c7", "family": "Grey"}, {"code": "CG4", "name": "Cool Grey 4", "hex": "#aaafb5", "family": "Grey"}, {"code": "CG5", "name": "Cool Grey 5", "hex": "#979da3", "family": "Grey"}, {"code": "CG6", "name": "Cool Grey 6", "hex": "#83898f", "family": "Grey"}, {"code": "CG7", "name": "Cool Grey 7", "hex": "#6f757b", "family": "Grey"}, {"code": "CG8", "name": "Cool Grey 8", "hex": "#596066", "family": "Grey"}, {"code": "CG9", "name": "Cool Grey 9", "hex": "#434a50", "family": "Grey"},
+            {"code": "GG1", "name": "Green Grey 1", "hex": "#e3e8e1", "family": "Grey"}, {"code": "GG3", "name": "Green Grey 3", "hex": "#c7cfc3", "family": "Grey"}, {"code": "GG5", "name": "Green Grey 5", "hex": "#a7b2a3", "family": "Grey"}, {"code": "GG7", "name": "Green Grey 7", "hex": "#849080", "family": "Grey"}, {"code": "GG9", "name": "Green Grey 9", "hex": "#5e6a5b", "family": "Grey"},
+            {"code": "WG0.5", "name": "Warm Grey 0.5", "hex": "#ebe9e6", "family": "Grey"}, {"code": "WG1", "name": "Warm Grey 1", "hex": "#e5e2dd", "family": "Grey"}, {"code": "WG2", "name": "Warm Grey 2", "hex": "#d6d2cc", "family": "Grey"}, {"code": "WG3", "name": "Warm Grey 3", "hex": "#c7c1bb", "family": "Grey"}, {"code": "WG4", "name": "Warm Grey 4", "hex": "#b6b0a8", "family": "Grey"}, {"code": "WG5", "name": "Warm Grey 5", "hex": "#a69e96", "family": "Grey"}, {"code": "WG6", "name": "Warm Grey 6", "hex": "#938b82", "family": "Grey"}, {"code": "WG7", "name": "Warm Grey 7", "hex": "#80786f", "family": "Grey"}, {"code": "WG8", "name": "Warm Grey 8", "hex": "#6c645b", "family": "Grey"}, {"code": "WG9", "name": "Warm Grey 9", "hex": "#575048", "family": "Grey"}
+        ];
+
+        const grid = document.getElementById('colorGrid');
+        const toast = document.getElementById('toast');
+        let currentFilter = 'All';
+
+        function renderColors(filter = 'All', searchQuery = '') {
+            grid.innerHTML = '';
+            
+            const filteredColors = colors.filter(c => {
+                const matchesFilter = filter === 'All' || c.family === filter;
+                const matchesSearch = c.code.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                                      c.name.toLowerCase().includes(searchQuery.toLowerCase());
+                return matchesFilter && matchesSearch;
+            });
+
+            filteredColors.forEach(color => {
+                const card = document.createElement('div');
+                card.className = 'color-card';
+                card.setAttribute('data-hex', color.hex.toUpperCase());
+                
+                // 加入點擊複製事件
+                card.onclick = () => copyHex(color.hex, color.code);
+
+                card.innerHTML = `
+                    <div class="swatch" style="background-color: ${color.hex}"></div>
+                    <div class="info">
+                        <div class="code">${color.code}</div>
+                        <div class="name" title="${color.name}">${color.name}</div>
+                    </div>
+                `;
+                
+                grid.appendChild(card);
+            });
+        }
+
+        function setFilter(family) {
+            currentFilter = family;
+            document.querySelectorAll('.controls button').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById('searchInput').value = '';
+            renderColors(family);
+        }
+
+        function filterColors() {
+            const query = document.getElementById('searchInput').value;
+            renderColors(currentFilter, query);
+        }
+
+        // 防彈版複製功能 (解決本地端 file:// 無法使用剪貼簿的問題)
+        function copyHex(hex, code) {
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(hex).then(() => {
+                    showToast(`成功複製 ${code} (${hex.toUpperCase()})`);
+                }).catch(() => fallbackCopy(hex, code));
+            } else {
+                fallbackCopy(hex, code);
+            }
+        }
+
+        function fallbackCopy(text, code) {
+            const textArea = document.createElement("textarea");
+            textArea.value = text;
+            textArea.style.top = "0";
+            textArea.style.left = "0";
+            textArea.style.position = "fixed";
+            
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            
+            try {
+                document.execCommand('copy');
+                showToast(`成功複製 ${code} (${text.toUpperCase()})`);
+            } catch (err) {
+                showToast(`複製失敗，請手動複製`);
+            }
+            
+            document.body.removeChild(textArea);
+        }
+
+        function showToast(message) {
+            toast.innerText = message;
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 2000);
+        }
+
+        function toggleTheme() {
+            const body = document.body;
+            if (body.getAttribute('data-theme') === 'dark') {
+                body.removeAttribute('data-theme');
+            } else {
+                body.setAttribute('data-theme', 'dark');
+            }
+        }
+
+        // 初始化載入
+        renderColors();
+    </script>
+</body>
+</html>
