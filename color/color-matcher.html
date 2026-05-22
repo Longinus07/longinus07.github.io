@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>色彩對照系統</title>
+    <style>
+        :root { --bg: #f0f2f5; --card: #ffffff; --text: #333333; --border: #e1e4e8; --primary: #0085CA; }
+        
+        /* 1. 解除封印：讓 body 最大寬度變成視窗的 96% (原本是 1000px) */
+        body { font-family: -apple-system, sans-serif; background-color: var(--bg); color: var(--text); padding: 20px 2%; max-width: 96%; margin: 0 auto; box-sizing: border-box; }
+        
+        .library-selector { background: #e8f4fd; padding: 15px 20px; border-radius: 8px; margin-bottom: 20px; display: flex; align-items: center; gap: 15px; border: 1px solid #b8daff; flex-wrap: wrap; }
+        .library-selector select { padding: 10px 15px; font-size: 1.1rem; border-radius: 6px; border: 1px solid #ccc; cursor: pointer; font-weight: bold; color: #333; outline: none; min-width: 300px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .library-selector select:hover { border-color: var(--primary); }
+
+        .matcher-container { display: flex; gap: 30px; background: var(--card); padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); flex-wrap: wrap; }
+        
+        .spectrum-outer-section { width: 100%; margin-bottom: 10px; }
+        .spectrum-container { position: relative; margin-bottom: 25px; width: 100%; }
+        #spectrumCanvas { width: 100%; height: 45px; border-radius: 6px; cursor: crosshair; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: block; border: 1px solid var(--border); outline: none; transition: border 0.2s; }
+        #spectrumCanvas:focus { border: 2px solid var(--primary); }
+        
+        #spectrumCursor {
+            position: absolute; bottom: -10px; left: 0; width: 0; height: 0;
+            border-left: 8px solid transparent; border-right: 8px solid transparent;
+            border-bottom: 12px solid #222; transform: translateX(-50%); pointer-events: none;
+            display: none; transition: left 0.1s ease-out; filter: drop-shadow(0 2px 3px rgba(0,0,0,0.3)); z-index: 10;
+        }
+
+        /* 2. 專業儀表板比例分配 */
+        /* 左側操作區：限制最大寬度為 400px，保持按鈕與輸入框的緊湊感 */
+        .input-section { flex: 1; min-width: 300px; max-width: 400px; }
+        
+        /* 右側展示區：佔用所有的剩餘空間 (flex: 3)，讓色票可以無限向右延伸 */
+        .output-section { flex: 3; min-width: 350px; }
+        
+        .color-picker-wrapper { display: flex; align-items: center; gap: 15px; margin-bottom: 20px; }
+        input[type="color"] { width: 80px; height: 80px; border-radius: 8px; cursor: pointer; border: none; }
+        input[type="text"] { padding: 10px; font-size: 1rem; border: 2px solid var(--border); border-radius: 6px; width: 100%; margin-bottom: 15px; box-sizing: border-box; }
+        
+        .results-grid { display: flex; gap: 15px; flex-wrap: wrap; margin-bottom: 30px; }
+        .series-container { background: #f8f9fa; padding: 20px; border-radius: 8px; border: 1px dashed #ccc; }
+        
+        .pantone-chip { width: 130px; background: #fff; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; cursor: pointer; transition: transform 0.2s; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .pantone-chip:hover { transform: translateY(-5px); box-shadow: 0 6px 15px rgba(0,0,0,0.15); }
+        .chip-color { height: 90px; width: 100%; }
+        .chip-info { padding: 10px; font-size: 0.85rem; background: #fff; }
+        
+        #toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #222; color: #fff; padding: 10px 20px; border-radius: 30px; opacity: 0; pointer-events: none; transition: 0.3s; z-index: 100; }
+        #statusLabel { margin-bottom: 20px; font-weight: bold; padding: 12px; border-radius: 6px; }
+    </style>
+</head>
+<body>
+
+    <h1 style="margin-bottom: 15px;">色彩對照系統</h1>
+    
+    <div class="library-selector">
+        <span style="font-size: 1.2rem;">📚 選擇色票庫：</span>
+        <select id="librarySelect">
+            <option value="Solid-Coated.js">PANTONE Solid-Coated (C 塗佈色)</option>
+            <option value="Solid-unCoated.js">PANTONE Solid-unCoated (U 無塗佈)</option>
+            <option value="metallic.js">PANTONE Metallics (金屬色)</option>
+            <option value="pastelsNeons.js">PANTONE Pastels & Neons (粉彩與霓虹)</option>
+            <option value="skin.js">PANTONE SkinTone (膚色指南)</option>
+        </select>
+    </div>
+
+    <div id="statusLabel" style="background-color: #ffeeba; color: #856404;">
+        ⏳ 載入系統中...
+    </div>
+
+    <div class="matcher-container">
+        
+        <div class="spectrum-outer-section">
+            <h3 style="margin-bottom: 5px;">🌈 1. 當前圖庫光譜</h3>
+            <p style="font-size: 0.8rem; color: #666; margin-top: 0;">點選下方光譜後，可使用鍵盤 <b>[ ← ]</b> 與 <b>[ → ]</b> 方向鍵一格一格微調色彩。</p>
+            <div class="spectrum-container">
+                <canvas id="spectrumCanvas" tabindex="0"></canvas>
+                <div id="spectrumCursor"></div>
+            </div>
+        </div>
+
+        <div class="input-section">
+            <h3 style="margin-bottom: 10px;">🔍 2. 色號/名稱搜尋</h3>
+            <p style="font-size: 0.8rem; color: #666; margin-top: 0;">支援模糊搜尋 (例如: 116c, cool gray 8)</p>
+            <input type="text" id="nameSearchInput" placeholder="在此輸入色號...">
+            
+            <h3 style="margin-top: 25px; margin-bottom: 10px;">🎨 3. HEX 最接近色</h3>
+            <div class="color-picker-wrapper">
+                <input type="color" id="colorPicker" value="#CC00C5">
+                <input type="text" id="hexInput" value="#CC00C5" style="margin-bottom: 0;">
+            </div>
+        </div>
+
+        <div class="output-section">
+            <h3 style="margin-top: 0; margin-bottom: 15px;">👉 搜尋/比對結果</h3>
+            <div class="results-grid" id="resultsContainer">
+                <p style="color:#999;">讀取中...</p>
+            </div>
+
+            <h3 style="margin-top: 30px; margin-bottom: 15px;">📚 同系列展開</h3>
+            <div class="results-grid series-container" id="seriesContainer">
+                <p style="color:#999;">點選上方任一顏色，自動展開同系列色票...</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast">已複製色碼!</div>
+
+    <script>
+        let pantoneDB = [];
+        let currentSpectrumColors = []; 
+        let currentSpectrumIndex = -1;  
+
+        function loadLibrary(filename) {
+            const status = document.getElementById('statusLabel');
+            status.style.backgroundColor = '#ffeeba';
+            status.style.color = '#856404';
+            status.innerText = `⏳ 正在切換並讀取 ${filename}...`;
+
+            currentSpectrumIndex = -1; 
+
+            const oldScript = document.getElementById('dynamic-script');
+            if (oldScript) oldScript.remove();
+
+            if (typeof window.pantoneData !== 'undefined') {
+                window.pantoneData = undefined; 
+            }
+
+            const script = document.createElement('script');
+            script.id = 'dynamic-script';
+            script.src = filename;
+            
+            script.onload = () => {
+                initLocalDatabase(filename); 
+                document.getElementById('nameSearchInput').value = ""; 
+                document.getElementById('seriesContainer').innerHTML = '<p style="color:#999;">點選上方任一顏色，自動展開同系列色票...</p>';
+                searchByName(""); 
+                initSpectrum(); 
+            };
+            
+            script.onerror = () => {
+                status.style.backgroundColor = '#f8d7da';
+                status.style.color = '#721c24';
+                status.innerText = `❌ 切換失敗！找不到檔案：${filename}。`;
+                pantoneDB = [];
+                currentSpectrumColors = [];
+                initSpectrum(); 
+                document.getElementById('resultsContainer').innerHTML = '<p style="color:#721c24;">請檢查檔案名稱是否正確。</p>';
+            };
+
+            document.body.appendChild(script);
+        }
+
+        document.getElementById('librarySelect').addEventListener('change', (e) => {
+            loadLibrary(e.target.value);
+        });
+
+        function initLocalDatabase(filename) {
+            const status = document.getElementById('statusLabel');
+            if (typeof pantoneData === 'undefined') return; 
+            
+            try {
+                if (Array.isArray(pantoneData)) {
+                    pantoneDB = pantoneData.map(item => {
+                        let h = item.hex || item.color || item.value || "";
+                        if (h && !String(h).startsWith('#')) h = '#' + h;
+                        let rawName = item.name || item.pantone || item.code || item.label || "Unknown";
+                        let n = String(rawName).replace(/PANTONE\s?/i, "");
+                        return { name: n, hex: String(h).toUpperCase() };
+                    }).filter(i => i.hex !== "" && i.name !== "Unknown");
+                } else {
+                    pantoneDB = []; 
+                    for (let key in pantoneData) {
+                        let val = pantoneData[key];
+                        let h = typeof val === 'string' ? val : (val.hex || val.color || "");
+                        if (h && !String(h).startsWith('#')) h = '#' + h;
+                        if (h) pantoneDB.push({ name: key.replace(/PANTONE\s?/i, ""), hex: String(h).toUpperCase() });
+                    }
+                }
+                status.style.backgroundColor = '#d4edda'; status.style.color = '#155724';
+                let displayName = document.getElementById('librarySelect').options[document.getElementById('librarySelect').selectedIndex].text;
+                status.innerText = `✅ 成功切換至【${displayName}】：共 ${pantoneDB.length} 個色彩`;
+            } catch (err) {
+                status.innerText = `❌ 解析資料庫失敗：${err.message}`;
+            }
+        }
+
+        function hexToHsl(hex) {
+            let res = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            if(!res) return {h:0, s:0, l:0};
+            let r = parseInt(res[1], 16) / 255, g = parseInt(res[2], 16) / 255, b = parseInt(res[3], 16) / 255;
+            let max = Math.max(r, g, b), min = Math.min(r, g, b);
+            let h, s, l = (max + min) / 2;
+            if(max === min) {
+                h = s = 0; 
+            } else {
+                let d = max - min;
+                s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+                switch(max) {
+                    case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+                    case g: h = (b - r) / d + 2; break;
+                    case b: h = (r - g) / d + 4; break;
+                }
+                h /= 6;
+            }
+            return {h: h*360, s: s*100, l: l*100};
+        }
+
+        function initSpectrum() {
+            const canvas = document.getElementById('spectrumCanvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = canvas.offsetWidth; 
+            canvas.height = canvas.offsetHeight;
+
+            if (pantoneDB.length === 0) {
+                ctx.fillStyle = "#f0f2f5";
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = "#999";
+                ctx.font = "14px Arial";
+                ctx.fillText("找不到色彩資料...", 10, 25);
+                updateCursor(); 
+                return;
+            }
+
+            currentSpectrumColors = [...pantoneDB].sort((a, b) => {
+                let hslA = hexToHsl(a.hex);
+                let hslB = hexToHsl(b.hex);
+                if (Math.abs(hslA.h - hslB.h) > 5) { return hslA.h - hslB.h; }
+                return hslB.l - hslA.l;
+            });
+
+            renderSpectrumCanvas(); 
+
+            if (!canvas.dataset.bound) {
+                canvas.addEventListener('mousedown', function(e) {
+                    if (currentSpectrumColors.length === 0) return;
+                    const rect = canvas.getBoundingClientRect();
+                    const scaleX = canvas.width / rect.width;
+                    const x = (e.clientX - rect.left) * scaleX;
+                    
+                    const sliceWidth = canvas.width / currentSpectrumColors.length;
+                    
+                    currentSpectrumIndex = Math.floor(x / sliceWidth);
+                    currentSpectrumIndex = Math.max(0, Math.min(currentSpectrumColors.length - 1, currentSpectrumIndex));
+
+                    applySpectrumSelection(); 
+                });
+
+                canvas.addEventListener('keydown', function(e) {
+                    if (currentSpectrumColors.length === 0 || currentSpectrumIndex === -1) return;
+                    
+                    if (e.key === 'ArrowLeft') {
+                        e.preventDefault(); 
+                        currentSpectrumIndex = Math.max(0, currentSpectrumIndex - 1);
+                        applySpectrumSelection();
+                    } else if (e.key === 'ArrowRight') {
+                        e.preventDefault();
+                        currentSpectrumIndex = Math.min(currentSpectrumColors.length - 1, currentSpectrumIndex + 1);
+                        applySpectrumSelection();
+                    }
+                });
+
+                canvas.dataset.bound = "true";
+            }
+        }
+        
+        function renderSpectrumCanvas() {
+            const canvas = document.getElementById('spectrumCanvas');
+            const ctx = canvas.getContext('2d');
+            const sliceWidth = canvas.width / currentSpectrumColors.length;
+
+            currentSpectrumColors.forEach((c, i) => {
+                ctx.fillStyle = c.hex;
+                ctx.fillRect(Math.floor(i * sliceWidth), 0, Math.ceil(sliceWidth + 1), canvas.height);
+            });
+
+            updateCursor(); 
+        }
+
+        function updateCursor() {
+            const cursor = document.getElementById('spectrumCursor');
+            if (currentSpectrumIndex !== -1 && currentSpectrumColors.length > 0) {
+                cursor.style.display = 'block';
+                const percentage = ((currentSpectrumIndex + 0.5) / currentSpectrumColors.length) * 100;
+                cursor.style.left = `${percentage}%`;
+            } else {
+                cursor.style.display = 'none';
+            }
+        }
+
+        function applySpectrumSelection() {
+            if (currentSpectrumIndex === -1) return;
+            
+            const hex = currentSpectrumColors[currentSpectrumIndex].hex;
+            
+            document.getElementById('colorPicker').value = hex;
+            document.getElementById('hexInput').value = hex;
+            document.getElementById('nameSearchInput').value = ""; 
+            
+            searchByHex(hex);
+            updateCursor(); 
+        }
+
+        window.addEventListener('resize', () => {
+            initSpectrum();
+            renderSpectrumCanvas();
+        });
+
+        // --- 自動推算同系列 ---
+        function findSeriesColors(baseName) {
+            let seriesColors = [];
+            let textMatch = baseName.match(/[A-Za-z]+(\s[A-Za-z]+)?/);
+            
+            if (textMatch && textMatch[0].trim().length > 2) {
+                let keyword = textMatch[0].trim().toLowerCase();
+                seriesColors = pantoneDB.filter(p => p.name.toLowerCase().includes(keyword));
+            } else {
+                let numMatch = baseName.match(/\d+/);
+                if (numMatch) {
+                    let numStr = numMatch[0];
+                    if (numStr.length >= 2) {
+                        let prefix = numStr.slice(0, -1); 
+                        seriesColors = pantoneDB.filter(p => {
+                            let pNum = p.name.match(/\d+/);
+                            return pNum && pNum[0].startsWith(prefix) && pNum[0].length === numStr.length;
+                        });
+                    }
+                }
+            }
+            seriesColors.sort((a, b) => a.name.localeCompare(b.name, undefined, {numeric: true}));
+            return seriesColors;
+        }
+
+        function renderSeries(baseColorName) {
+            const container = document.getElementById('seriesContainer');
+            if (!baseColorName) return;
+            
+            let series = findSeriesColors(baseColorName);
+            container.innerHTML = series.length ? '' : '<p style="color:#999;">此資料庫目前找不到同系列色彩</p>';
+            
+            series.forEach(c => {
+                const div = createChip(c);
+                if(c.name === baseColorName) {
+                    div.style.border = "3px solid #0085CA";
+                    div.style.transform = "scale(1.05)";
+                }
+                container.appendChild(div);
+            });
+        }
+
+        // --- 搜尋與比對 ---
+        function searchByName(query) {
+            const container = document.getElementById('resultsContainer');
+            if (!query) {
+                container.innerHTML = '<p style="color:#999;">請在左側開始搜尋...</p>';
+                document.getElementById('seriesContainer').innerHTML = '<p style="color:#999;">點選上方任一顏色，自動展開同系列色票...</p>';
+                return;
+            }
+            const cleanQuery = query.toLowerCase().replace(/\s+/g, '');
+            const matches = pantoneDB.filter(p => p.name.toLowerCase().replace(/\s+/g, '').includes(cleanQuery));
+            
+            renderResults(matches.slice(0, 5));
+            if(matches.length > 0) renderSeries(matches[0].name);
+        }
+
+        function hexToRgb(hex) {
+            let res = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            return res ? { r: parseInt(res[1], 16), g: parseInt(res[2], 16), b: parseInt(res[3], 16) } : null;
+        }
+
+        function colorDistance(rgb1, rgb2) {
+            if (!rgb1 || !rgb2) return 9999;
+            return Math.sqrt(Math.pow(rgb1.r - rgb2.r, 2) + Math.pow(rgb1.g - rgb2.g, 2) + Math.pow(rgb1.b - rgb2.b, 2));
+        }
+
+        function searchByHex(targetHex) {
+            if (pantoneDB.length === 0) return;
+            const targetRgb = hexToRgb(targetHex);
+            if (!targetRgb) return;
+
+            let scoredColors = pantoneDB.map(p => ({ ...p, distance: colorDistance(targetRgb, hexToRgb(p.hex)) }));
+            scoredColors.sort((a, b) => a.distance - b.distance);
+            
+            let topResults = scoredColors.slice(0, 5);
+            renderResults(topResults, true);
+            if(topResults.length > 0) renderSeries(topResults[0].name);
+        }
+
+        function createChip(c, isHexSearch = false, matchPercent = null) {
+            const div = document.createElement('div');
+            div.className = 'pantone-chip';
+            div.title = "點擊複製色碼";
+            div.onclick = () => { 
+                const textArea = document.createElement("textarea");
+                textArea.value = c.hex;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                showToast(c.hex);
+                renderSeries(c.name);
+            };
+            
+            let matchTag = isHexSearch && matchPercent ? `<div style="font-size:0.75rem; color:#0085CA; margin-top:4px; font-weight:bold;">相似度: ${matchPercent}%</div>` : '';
+
+            div.innerHTML = `
+                <div class="chip-color" style="background-color:${c.hex}"></div>
+                <div class="chip-info">
+                    <b style="font-size:1.1rem;">${c.name}</b><br>
+                    <span style="color:#555;">${c.hex}</span>
+                    ${matchTag}
+                </div>`;
+            return div;
+        }
+
+        function renderResults(colors, isHexSearch = false) {
+            const container = document.getElementById('resultsContainer');
+            container.innerHTML = colors.length ? '' : '<p style="color:#999;">找不到相符的顏色 😭</p>';
+            colors.forEach((c) => {
+                let percent = isHexSearch ? Math.max(0, 100 - (c.distance / 4.42)).toFixed(1) : null;
+                container.appendChild(createChip(c, isHexSearch, percent));
+            });
+        }
+
+        function showToast(text) {
+            const t = document.getElementById('toast');
+            t.innerText = `✅ 已複製 HEX: ${text}`;
+            t.style.opacity = 1;
+            setTimeout(() => t.style.opacity = 0, 1500);
+        }
+
+        document.getElementById('nameSearchInput').addEventListener('input', e => {
+            currentSpectrumIndex = -1; 
+            renderSpectrumCanvas();
+            searchByName(e.target.value);
+            if(e.target.value) document.getElementById('hexInput').value = "";
+        });
+        document.getElementById('colorPicker').addEventListener('input', (e) => {
+            currentSpectrumIndex = -1;
+            renderSpectrumCanvas();
+            const val = e.target.value.toUpperCase();
+            document.getElementById('hexInput').value = val;
+            document.getElementById('nameSearchInput').value = ""; 
+            searchByHex(val);
+        });
+        document.getElementById('hexInput').addEventListener('input', (e) => {
+            currentSpectrumIndex = -1;
+            renderSpectrumCanvas();
+            let val = e.target.value;
+            if (val.length === 7 && val.startsWith('#')) {
+                document.getElementById('colorPicker').value = val;
+                document.getElementById('nameSearchInput').value = "";
+                searchByHex(val);
+            }
+        });
+
+        window.addEventListener('DOMContentLoaded', () => {
+            loadLibrary(document.getElementById('librarySelect').value);
+        });
+
+    </script>
+</body>
+</html>
