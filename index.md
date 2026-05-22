@@ -4,4 +4,4 @@ AR Library! view it [here](../usdz/index_usdz.html)!
 
 GLB Library! view it [here](../glb/index_glb.html)!
 
-color-matcher! view it [here](../color/color-matcher.html)!
+Color-matcher! view it [here](../color/color-matcher.html)!
