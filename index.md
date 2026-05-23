@@ -1,4 +1,3 @@
-| 項目 | 連結 |
 | :--- | :--- |
 | AR Library! | [here](../usdz/index_usdz.html)! |
 | GLB Library! | [here](../glb/index_glb.html)! |
