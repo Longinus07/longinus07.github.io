@@ -12,7 +12,7 @@
     <td><a href="../color/color-matcher.html">here!</a></td>
   </tr>
   <tr>
-    <td>Marker_color1</td>
+    <td>Marker_color</td>
     <td><a href="../color/Marker_168.html">here!</a></td>
   </tr>
 </table>
