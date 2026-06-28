@@ -17,6 +17,6 @@
   </tr>
   <tr>
   <td>Pad-eHP</td>
-    <td><a href="../Pad-eHP/Pad-EHP.html">here!</a></td>
+    <td><a href="../Pad-eHP/PAD-EHP.html">here!</a></td>
   </tr>
 </table>
