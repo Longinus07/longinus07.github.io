@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>龍族拼圖 (P&D) 實質扛傷計算機</title>
+    <style>
+        :root {
+            --primary: #4A90E2;
+            --bg: #F5F7FA;
+            --card-bg: #FFFFFF;
+            --text-main: #333333;
+            --highlight: #FFF3CD;
+            --border: #E1E8ED;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        h1 {
+            text-align: center;
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+        }
+        
+        /* 更新排版邏輯：使用 CSS Grid 達成絕對均分 */
+        .container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr); /* 切割成 3 個等寬的直列 */
+            gap: 20px;
+            width: 100%;
+            max-width: 1600px; /* 放大最大寬度限制，配合大螢幕 */
+        }
+
+        /* 當視窗寬度小於 900px 時，自動改回單行直排避免擁擠 */
+        @media (max-width: 900px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .team-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            transition: transform 0.2s, box-shadow 0.2s;
+            display: flex;
+            flex-direction: column; /* 讓卡片內部元素能垂直對齊 */
+        }
+        .team-card.best {
+            border: 2px solid var(--primary);
+            background-color: var(--highlight);
+            box-shadow: 0 6px 12px rgba(74, 144, 226, 0.2);
+            transform: translateY(-5px);
+        }
+        .team-title {
+            font-size: 1.25rem;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 15px;
+            color: var(--primary);
+            border-bottom: 2px solid var(--border);
+            padding-bottom: 10px;
+        }
+        .best .team-title {
+            color: #D35400;
+            border-bottom-color: #D35400;
+        }
+        .input-group {
+            margin-bottom: 15px;
+        }
+        .input-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        label {
+            font-size: 0.9rem;
+            color: #555;
+        }
+        input[type="number"] {
+            width: 80px;
+            padding: 6px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            text-align: center;
+            font-size: 1rem;
+        }
+        .results {
+            margin-top: auto; /* 將結果區塊推到底部，讓視覺更整齊 */
+            padding-top: 15px;
+            border-top: 1px dashed var(--border);
+        }
+        .result-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+        }
+        .ehp-row {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #E74C3C;
+            margin-top: 10px;
+        }
+        .best-badge {
+            display: none;
+            text-align: center;
+            color: #D35400;
+            font-weight: bold;
+            margin-top: 10px;
+            font-size: 1.1rem;
+        }
+        .best .best-badge {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>🛡️ 龍族拼圖 實質扛傷 (eHP) 計算機</h1>
+    
+    <div class="container">
+        <div class="team-card" id="card-1">
+            <div class="team-title">隊伍 A (純血量)</div>
+            <div class="input-group">
+                <div class="input-row">
+                    <label>隊長 1：HP 倍率</label>
+                    <input type="number" id="hp1-1" value="4" min="1" step="0.1" oninput="calculate()">
+                </div>
+                <div class="input-row">
+                    <label>隊長 1：減傷 (%)</label>
+                    <input type="number" id="shield1-1" value="0" min="0" max="100" step="1" oninput="calculate()">
+                </div>
+            </div>
+            <div class="input-group">
+                <div class="input-row">
+                    <label>隊長 2：HP 倍率</label>
+                    <input type="number" id="hp2-1" value="1" min="1" step="0.1" oninput="calculate()">
+                </div>
+                <div class="input-row">
+                    <label>隊長 2：減傷 (%)</label>
+                    <input type="number" id="shield2-1" value="0" min="0" max="100" step="1" oninput="calculate()">
+                </div>
+            </div>
+            <div class="results">
+                <div class="result-row"><span>總 HP 倍率：</span><span id="res-hp-1">4.00 倍</span></div>
+                <div class="result-row"><span>總減傷比例：</span><span id="res-shield-1">0.00 %</span></div>
+                <div class="result-row ehp-row"><span>實質扛傷 (eHP)：</span><span id="res-ehp-1">4.00 倍</span></div>
+            </div>
+            <div class="best-badge">👑 最強扛傷！</div>
+        </div>
+
+        <div class="team-card" id="card-2">
+            <div class="team-title">隊伍 B (純減傷)</div>
+            <div class="input-group">
+                <div class="input-row">
+                    <label>隊長 1：HP 倍率</label>
+                    <input type="number" id="hp1-2" value="1" min="1" step="0.1" oninput="calculate()">
+                </div>
+                <div class="input-row">
+                    <label>隊長 1：減傷 (%)</label>
+                    <input type="number" id="shield1-2" value="75" min="0" max="100" step="1" oninput="calculate()">
+                </div>
+            </div>
+            <div class="input-group">
+                <div class="input-row">
+                    <label>隊長 2：HP 倍率</label>
+                    <input type="number" id="hp2-2" value="1" min="1" step="0.1" oninput="calculate()">
+                </div>
+                <div class="input-row">
+                    <label>隊長 2：減傷 (%)</label>
+                    <input type="number" id="shield2-2" value="0" min="0" max="100" step="1" oninput="calculate()">
+                </div>
+            </div>
+            <div class="results">
+                <div class="result-row"><span>總 HP 倍率：</span><span id="res-hp-2">1.00 倍</span></div>
+                <div class="result-row"><span>總減傷比例：</span><span id="res-shield-2">75.00 %</span></div>
+                <div class="result-row ehp-row"><span>實質扛傷 (eHP)：</span><span id="res-ehp-2">4.00 倍</span></div>
+            </div>
+            <div class="best-badge">👑 最強扛傷！</div>
+        </div>
+
+        <div class="team-card" id="card-3">
+            <div class="team-title">隊伍 C (複合型)</div>
+            <div class="input-group">
+                <div class="input-row">
+                    <label>隊長 1：HP 倍率</label>
+                    <input type="number" id="hp1-3" value="2" min="1" step="0.1" oninput="calculate()">
+                </div>
+                <div class="input-row">
+                    <label>隊長 1：減傷 (%)</label>
+                    <input type="number" id="shield1-3" value="50" min="0" max="100" step="1" oninput="calculate()">
+                </div>
+            </div>
+            <div class="input-group">
+                <div class="input-row">
+                    <label>隊長 2：HP 倍率</label>
+                    <input type="number" id="hp2-3" value="2" min="1" step="0.1" oninput="calculate()">
+                </div>
+                <div class="input-row">
+                    <label>隊長 2：減傷 (%)</label>
+                    <input type="number" id="shield2-3" value="50" min="0" max="100" step="1" oninput="calculate()">
+                </div>
+            </div>
+            <div class="results">
+                <div class="result-row"><span>總 HP 倍率：</span><span id="res-hp-3">4.00 倍</span></div>
+                <div class="result-row"><span>總減傷比例：</span><span id="res-shield-3">75.00 %</span></div>
+                <div class="result-row ehp-row"><span>實質扛傷 (eHP)：</span><span id="res-ehp-3">16.00 倍</span></div>
+            </div>
+            <div class="best-badge">👑 最強扛傷！</div>
+        </div>
+    </div>
+
+    <script>
+        function calculate() {
+            let maxEhp = -1;
+            let bestTeams = [];
+            const results = [];
+
+            for (let i = 1; i <= 3; i++) {
+                const hp1 = parseFloat(document.getElementById(`hp1-${i}`).value) || 1;
+                const shield1 = parseFloat(document.getElementById(`shield1-${i}`).value) || 0;
+                const hp2 = parseFloat(document.getElementById(`hp2-${i}`).value) || 1;
+                const shield2 = parseFloat(document.getElementById(`shield2-${i}`).value) || 0;
+
+                const totalHp = hp1 * hp2;
+                const remain1 = 1 - (shield1 / 100);
+                const remain2 = 1 - (shield2 / 100);
+                const totalShieldPct = (1 - (remain1 * remain2)) * 100;
+                
+                let ehp = 0;
+                if (totalShieldPct >= 100) {
+                    ehp = Infinity;
+                } else {
+                    ehp = totalHp / (1 - (totalShieldPct / 100));
+                }
+
+                results.push({ id: i, ehp: ehp });
+
+                document.getElementById(`res-hp-${i}`).innerText = `${totalHp.toFixed(2)} 倍`;
+                document.getElementById(`res-shield-${i}`).innerText = `${totalShieldPct.toFixed(2)} %`;
+                document.getElementById(`res-ehp-${i}`).innerText = ehp === Infinity ? "無敵 (∞)" : `${ehp.toFixed(2)} 倍`;
+
+                if (ehp > maxEhp && ehp !== Infinity) {
+                    maxEhp = ehp;
+                    bestTeams = [i];
+                } else if (ehp === maxEhp && ehp !== Infinity) {
+                    bestTeams.push(i);
+                }
+            }
+
+            for (let i = 1; i <= 3; i++) {
+                const card = document.getElementById(`card-${i}`);
+                if (bestTeams.includes(i) && maxEhp > 0) {
+                    card.classList.add('best');
+                } else {
+                    card.classList.remove('best');
+                }
+            }
+        }
+
+        calculate();
+    </script>
+</body>
+</html>
